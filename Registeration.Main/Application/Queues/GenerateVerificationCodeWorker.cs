@@ -4,14 +4,14 @@ using Registeration.Main.Domain.Models;
 
 namespace Registeration.Main.Application.Queues
 {
-    public class VerificationCodeWorker(IServiceProvider provider) : BackgroundService
+    public class GenerateVerificationCodeWorker(IServiceProvider provider) : BackgroundService
     {
         private readonly IServiceProvider _provider = provider;
         private VerificationCodeQueue? _queue;
         private IVerificationService? _verifyService;
         private IEmailService? _emailService;
         private ISmsService? _smsService;
-        private ILogger<VerificationCodeWorker>? _logger;
+        private ILogger<GenerateVerificationCodeWorker>? _logger;
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -22,10 +22,9 @@ namespace Registeration.Main.Application.Queues
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     _verifyService = _provider.GetRequiredService<IVerificationService>();
-                    _logger = _provider.GetRequiredService<ILogger<VerificationCodeWorker>>();
+                    _logger = _provider.GetRequiredService<ILogger<GenerateVerificationCodeWorker>>();
 
                     var message = await _queue.DequeueAsync();
-
                     if (message != null)
                     {
                         try
@@ -59,7 +58,7 @@ namespace Registeration.Main.Application.Queues
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError($"Error processing message: {message}\n  Exception message: {ex.Message} {ex.InnerException?.Message}");
+                            _logger.LogError($"Error processing message: {message}\n Exception message: {ex.Message}. {ex.InnerException?.Message}");
                             // Optionally re-enqueue the message for retry
                         }
                     }

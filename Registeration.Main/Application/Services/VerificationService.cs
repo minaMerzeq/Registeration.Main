@@ -12,10 +12,14 @@ namespace Registeration.Main.Application.Services
         private readonly IUserRepo _userRepo = userRepo;
         private readonly VerificationCodeQueue _queue = queue;
 
+        private readonly List<VerificationCodeType> TypesList = [VerificationCodeType.Email, VerificationCodeType.Phone];
+        private const int VERIFICATION_CODE_MIN = 1000, VERIFICATION_CODE_MAX = 9999;
+        private const int PIN_MIN = 100000, PIN_MAX = 999999;
+
         public int GenerateCode()
         {
             var random = new Random();
-            var code = random.Next(1000, 9999);
+            var code = random.Next(VERIFICATION_CODE_MIN, VERIFICATION_CODE_MAX);
             return code;
         }
 
@@ -27,8 +31,14 @@ namespace Registeration.Main.Application.Services
 
         public async Task<Response<object>> VerifyCodeAsync(VerifyCodeDto dto)
         {
-            var verification = await _verificationRepo.GetFirstAsync(dto);
+            if (dto.ICNumber <= 0 || dto.Code < VERIFICATION_CODE_MIN || dto.Code > VERIFICATION_CODE_MAX || !TypesList.Contains(dto.Type))
+                return new Response<object>
+                {
+                    Message = "Invalid data",
+                    Status = false
+                };
 
+            var verification = await _verificationRepo.GetFirstAsync(dto);
             if (verification == null)
             {
                 return new Response<object>
@@ -66,8 +76,14 @@ namespace Registeration.Main.Application.Services
 
         public async Task<Response<object>> ResendCodeAsync(ResendCodeDto dto)
         {
-            var userCommunicationData = await _userRepo.GetCommunicationDataAsync(dto.ICNumber);
+            if (dto.ICNumber <= 0 || !TypesList.Contains(dto.Type))
+                return new Response<object>
+                {
+                    Message = "Invalid data",
+                    Status = false
+                };
 
+            var userCommunicationData = await _userRepo.GetCommunicationDataAsync(dto.ICNumber);
             if (userCommunicationData == null)
             {
                 return new Response<object>
@@ -93,8 +109,14 @@ namespace Registeration.Main.Application.Services
 
         public async Task<Response<object>> AcceptPolicyAsync(int icNumber)
         {
+            if(icNumber <= 0)
+                return new Response<object>
+                {
+                    Message = "Invalid IC Number",
+                    Status = false
+                };
+            
             var user = await _userRepo.GetByICNumberAsync(icNumber);
-
             if (user == null)
             {
                 return new Response<object>
@@ -123,8 +145,14 @@ namespace Registeration.Main.Application.Services
 
         public async Task<Response<object>> AddPinAsync(PinDto dto)
         {
-            var user = await _userRepo.GetByICNumberAsync(dto.ICNumber);
+            if (dto.ICNumber <= 0 || dto.Pin < PIN_MIN || dto.Pin > PIN_MAX)
+                return new Response<object>
+                {
+                    Message = "Invalid data",
+                    Status = false
+                };
 
+            var user = await _userRepo.GetByICNumberAsync(dto.ICNumber);
             if (user == null)
             {
                 return new Response<object>
@@ -153,8 +181,14 @@ namespace Registeration.Main.Application.Services
 
         public async Task<Response<object>> ToggleBiometricAsync(BiometricDto dto)
         {
-            var user = await _userRepo.GetByICNumberAsync(dto.ICNumber);
+            if (dto.ICNumber <= 0)
+                return new Response<object>
+                {
+                    Message = "Invalid IC Number",
+                    Status = false
+                };
 
+            var user = await _userRepo.GetByICNumberAsync(dto.ICNumber);
             if (user == null)
             {
                 return new Response<object>

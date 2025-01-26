@@ -25,6 +25,9 @@ builder.Services.AddScoped<IVerificationService, VerificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ISmsService, SmsService>();
 
+builder.Services.AddSingleton<VerificationCodeQueue>();
+builder.Services.AddHostedService<GenerateVerificationCodeWorker>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -32,9 +35,6 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowAnyHeader().SetIsOriginAllowed(origin => true).AllowCredentials());
 });
-
-builder.Services.AddSingleton<VerificationCodeQueue>();
-builder.Services.AddHostedService<VerificationCodeWorker>();
 
 var app = builder.Build();
 

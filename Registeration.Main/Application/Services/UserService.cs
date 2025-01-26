@@ -13,8 +13,14 @@ namespace Registeration.Main.Application.Services
 
         public async Task<Response<RegisterResDto>> RegisterAsync(RegisterUserDto dto)
         {
+            if(dto.ICNumber <= 0 || string.IsNullOrEmpty(dto.Name) || string.IsNullOrEmpty(dto.Email) || string.IsNullOrEmpty(dto.PhoneNumber))
+                return new Response<RegisterResDto>
+                {
+                    Status = false,
+                    Message = "Invalid data",
+                };
+            
             var isUserExists = await _userRepo.UserExistsAsync(dto.ICNumber);
-
             if (isUserExists) 
                 return new Response<RegisterResDto>
                 {
@@ -59,13 +65,19 @@ namespace Registeration.Main.Application.Services
 
         public async Task<Response<UserCommuncationDto>> LoginAsync(int ICNumber)
         {
-            var userCommunicationData = await _userRepo.GetCommunicationDataAsync(ICNumber);
+            if (ICNumber <= 0)
+                return new Response<UserCommuncationDto>
+                {
+                    Status = false,
+                    Message = "Invalid IC Number",
+                };
 
+            var userCommunicationData = await _userRepo.GetCommunicationDataAsync(ICNumber);
             if (userCommunicationData == null)
                 return new Response<UserCommuncationDto>
                 {
                     Status = false,
-                    Message = "User not found",
+                    Message = "Account not found",
                 };
 
             _queue.Enqueue(new VerificationCodeMessage
