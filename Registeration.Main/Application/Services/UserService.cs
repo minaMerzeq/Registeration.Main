@@ -45,8 +45,8 @@ namespace Registeration.Main.Application.Services
                 _queue.Enqueue(new VerificationCodeMessage
                 {
                     UserId = user.Id,
-                    Type = VerificationCodeType.Email,
-                    Recipient = user.Email,
+                    Type = VerificationCodeType.Phone,
+                    Recipient = user.PhoneNumber,
                 });
 
                 return new Response<RegisterResDto>
